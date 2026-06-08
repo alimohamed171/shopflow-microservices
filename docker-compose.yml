@@ -23,7 +23,7 @@ services:
       - postgres_order_data:/var/lib/postgresql/data
       - ./docker/postgres-order/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U order_user -d orderdb"]
+      test: [ "CMD-SHELL", "pg_isready -U order_user -d orderdb" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -42,7 +42,7 @@ services:
       - postgres_payment_data:/var/lib/postgresql/data
       - ./docker/postgres-payment/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U payment_user -d paymentdb"]
+      test: [ "CMD-SHELL", "pg_isready -U payment_user -d paymentdb" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -62,7 +62,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 15
@@ -94,7 +94,7 @@ services:
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1" ]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -126,7 +126,7 @@ services:
     ports:
       - "8082:8082"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1" ]
       interval: 15s
       timeout: 5s
       retries: 10
@@ -180,7 +180,7 @@ services:
   loki:
     image: grafana/loki:2.9.0
     container_name: shopflow-loki
-    user: "10001:10001"
+    user: "0:0"
     restart: unless-stopped
     ports:
       - "3100:3100"
@@ -192,6 +192,7 @@ services:
   tempo:
     image: grafana/tempo:latest
     container_name: shopflow-tempo
+    user: "0:0"
     restart: unless-stopped
     ports:
       - "3200:3200"
