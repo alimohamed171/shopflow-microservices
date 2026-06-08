@@ -1,6 +1,9 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY api-gateway/pom.xml ./pom.xml
+
+RUN mvn -B dependency:go-offline
+
 COPY api-gateway/src     ./src
 RUN mvn -B package -DskipTests
 

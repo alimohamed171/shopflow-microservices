@@ -180,6 +180,7 @@ services:
   loki:
     image: grafana/loki:2.9.0
     container_name: shopflow-loki
+    user: "10001:10001"
     restart: unless-stopped
     ports:
       - "3100:3100"

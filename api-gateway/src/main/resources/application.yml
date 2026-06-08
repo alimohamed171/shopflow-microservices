@@ -26,6 +26,7 @@ spring:
                 name: paymentService
                 fallbackUri: forward:/fallback/payments
       globalcors:
+        add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
             allowedOrigins: "*"
