@@ -1,0 +1,78 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  ShopFlow — Infrastructure Only
+#
+#  Use this when developing locally with `mvn spring-boot:run` so you don't
+#  need to rebuild Docker images every time you change code.
+#
+#  Usage:
+#    docker compose -f docker-compose.infra.yml up -d
+#
+#  Then run each service locally:
+#    cd core-service    && mvn spring-boot:run
+#    cd payment-service && mvn spring-boot:run
+#    cd api-gateway     && mvn spring-boot:run
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: shopflow-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secret
+      MYSQL_DATABASE:      shopflow_core
+      MYSQL_USER:          shopflow
+      MYSQL_PASSWORD:      shopflow_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ushopflow", "-pshopflow_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: shopflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       shopflow_payment
+      POSTGRES_USER:     shopflow
+      POSTGRES_PASSWORD: shopflow_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shopflow -d shopflow_payment"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:4.3.1-management
+    container_name: shopflow-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql_data:
+  postgres_data:
+  rabbitmq_data:
