@@ -1,242 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ShopFlow — SAGA Monitor</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
-<style>
-  :root {
-    --bg: #0a0c10;
-    --surface: #111318;
-    --surface2: #181c24;
-    --border: #1f2530;
-    --accent: #00e5ff;
-    --accent2: #7c3aed;
-    --green: #00e676;
-    --red: #ff1744;
-    --yellow: #ffd600;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --font: 'Space Grotesk', sans-serif;
-    --mono: 'JetBrains Mono', monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ShopFlow — Order Console</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* ── Tokens ─────────────────────────────────────────────────────────────── */
+    :root {
+      --white:   #ffffff;
+      --bg:      #f8f9fb;
+      --surface: #ffffff;
+      --border:  #e4e7ec;
+      --border2: #d0d5dd;
 
-  /* ── Layout ── */
-  .shell { display: grid; grid-template-columns: 380px 1fr; min-height: 100vh; }
-  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 32px 24px; display: flex; flex-direction: column; gap: 28px; }
-  .main { padding: 32px; display: flex; flex-direction: column; gap: 24px; overflow: hidden; }
+      --text:    #101828;
+      --sub:     #475467;
+      --muted:   #98a2b3;
 
-  /* ── Logo / header ── */
-  .logo { display: flex; align-items: center; gap: 12px; }
-  .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-  .logo-text h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
-  .logo-text p { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+      --indigo:  #4f46e5;
+      --indigo-l:#eef2ff;
+      --indigo-m:#c7d2fe;
 
-  /* ── Form card ── */
-  .card { background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 24px; }
-  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
-  .card-title::before { content: ''; display: block; width: 3px; height: 14px; background: var(--accent); border-radius: 2px; }
+      --green:   #12b76a;
+      --green-l: #d1fadf;
+      --red:     #f04438;
+      --red-l:   #fee4e2;
+      --amber:   #f79009;
+      --amber-l: #fef3c7;
+      --violet:  #7c3aed;
+      --violet-l:#ede9fe;
 
-  label { font-size: 12px; font-weight: 500; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .field { margin-bottom: 16px; }
-  input, select {
-    width: 100%; padding: 10px 14px; background: var(--bg); border: 1px solid var(--border);
-    border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 14px;
-    outline: none; transition: border-color .2s;
-  }
-  input:focus, select:focus { border-color: var(--accent); }
-  select option { background: var(--surface); }
+      --font:  'Inter', sans-serif;
+      --mono:  'IBM Plex Mono', monospace;
 
-  .amount-wrap { position: relative; }
-  .amount-wrap span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; }
-  .amount-wrap input { padding-left: 28px; }
+      --radius: 10px;
+      --shadow-sm: 0 1px 3px rgba(16,24,40,.08), 0 1px 2px rgba(16,24,40,.06);
+      --shadow:    0 4px 8px -2px rgba(16,24,40,.10), 0 2px 4px -2px rgba(16,24,40,.06);
+    }
 
-  .threshold-hint { font-size: 11px; color: var(--yellow); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+    /* ── Reset ──────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 
-  .btn-submit {
-    width: 100%; padding: 13px; background: linear-gradient(135deg, var(--accent), #0090a8);
-    border: none; border-radius: 10px; color: #000; font-family: var(--font); font-size: 15px;
-    font-weight: 700; cursor: pointer; letter-spacing: 0.3px; transition: opacity .2s, transform .15s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
-  .btn-submit:active { transform: translateY(0); }
-  .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-  .btn-submit .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,.3); border-top-color: #000; border-radius: 50%; animation: spin .7s linear infinite; }
-  .btn-submit.loading .spinner { display: block; }
-  .btn-submit.loading .btn-label { opacity: .7; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+    /* ── Layout ─────────────────────────────────────────────────────────────── */
+    .shell { display: grid; grid-template-columns: 340px 1fr; min-height: 100vh; }
+    .sidebar { background: var(--white); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 0; }
+    .main { padding: 32px; display: flex; flex-direction: column; gap: 24px; min-height: 100vh; }
 
-  /* ── Stats row ── */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; }
-  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
-  .stat-value { font-size: 28px; font-weight: 700; font-family: var(--mono); }
-  .stat-total .stat-value { color: var(--accent); }
-  .stat-completed .stat-value { color: var(--green); }
-  .stat-failed .stat-value { color: var(--red); }
-  .stat-pending .stat-value { color: var(--yellow); }
+    /* ── Sidebar sections ───────────────────────────────────────────────────── */
+    .sidebar-top { padding: 24px 20px 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-section { padding: 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-section:last-child { border-bottom: none; }
 
-  /* ── SAGA flow diagram ── */
-  .saga-flow { display: flex; align-items: center; gap: 0; flex-wrap: nowrap; overflow-x: auto; padding: 4px 0; }
-  .saga-step { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 110px; }
-  .saga-step-icon { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 18px; background: var(--surface2); transition: all .4s; }
-  .saga-step-label { font-size: 11px; color: var(--muted); text-align: center; font-weight: 500; }
-  .saga-arrow { color: var(--border); font-size: 18px; padding: 0 4px; margin-top: -24px; }
-  .saga-step.active .saga-step-icon { border-color: var(--accent); background: rgba(0,229,255,.1); box-shadow: 0 0 16px rgba(0,229,255,.3); }
-  .saga-step.done .saga-step-icon { border-color: var(--green); background: rgba(0,230,118,.1); }
-  .saga-step.fail .saga-step-icon { border-color: var(--red); background: rgba(255,23,68,.1); }
+    /* ── Logo ───────────────────────────────────────────────────────────────── */
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-mark {
+      width: 36px; height: 36px; background: var(--indigo); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .logo-mark svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .logo-name { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .logo-tag { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 1px; }
 
-  /* ── Orders table ── */
-  .orders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .orders-header h2 { font-size: 16px; font-weight: 600; }
-  .refresh-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 8px; font-family: var(--font); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: color .2s, border-color .2s; }
-  .refresh-btn:hover { color: var(--text); border-color: var(--accent); }
-  .refresh-btn.spinning svg { animation: spin .6s linear infinite; }
+    /* ── Section label ──────────────────────────────────────────────────────── */
+    .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 14px; }
 
-  table { width: 100%; border-collapse: collapse; }
-  thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface); }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
-  tbody tr:hover { background: var(--surface2); }
-  td { padding: 12px 14px; font-size: 13px; font-family: var(--mono); }
-  td.product-col { font-family: var(--font); font-weight: 500; }
-  td.id-col { color: var(--muted); font-size: 11px; }
+    /* ── Form ───────────────────────────────────────────────────────────────── */
+    .field { margin-bottom: 14px; }
+    .field:last-of-type { margin-bottom: 18px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: var(--sub); margin-bottom: 5px; }
 
-  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--font); }
-  .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
-  .badge-PENDING { background: rgba(255,214,0,.12); color: var(--yellow); } .badge-PENDING::before { background: var(--yellow); }
-  .badge-PAYMENT_PROCESSING { background: rgba(0,229,255,.1); color: var(--accent); } .badge-PAYMENT_PROCESSING::before { background: var(--accent); animation: pulse 1s infinite; }
-  .badge-COMPLETED { background: rgba(0,230,118,.12); color: var(--green); } .badge-COMPLETED::before { background: var(--green); }
-  .badge-FAILED { background: rgba(255,23,68,.12); color: var(--red); } .badge-FAILED::before { background: var(--red); }
-  .badge-COMPENSATED { background: rgba(124,58,237,.15); color: #a78bfa; } .badge-COMPENSATED::before { background: #a78bfa; }
-  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+    input, select {
+      width: 100%; padding: 9px 12px;
+      background: var(--white); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--text); font-family: var(--font); font-size: 14px;
+      outline: none; transition: border-color .15s, box-shadow .15s;
+      appearance: none; -webkit-appearance: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--indigo);
+      box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+    }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
 
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
-  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-state p { font-size: 14px; }
+    .amount-wrap { position: relative; }
+    .amount-prefix { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+    .amount-wrap input { padding-left: 24px; }
 
-  /* ── Toast ── */
-  #toast { position: fixed; bottom: 32px; right: 32px; z-index: 999; display: flex; flex-direction: column; gap: 10px; }
-  .toast-item { padding: 14px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; animation: slideIn .3s ease; max-width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
-  .toast-success { background: #0a2d1a; border: 1px solid var(--green); color: var(--green); }
-  .toast-error { background: #2d0a0a; border: 1px solid var(--red); color: var(--red); }
-  .toast-info { background: #0a1a2d; border: 1px solid var(--accent); color: var(--accent); }
-  @keyframes slideIn { from { transform: translateX(60px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+    .threshold-hint {
+      margin-top: 6px; padding: 7px 10px; background: var(--amber-l);
+      border-radius: 6px; font-size: 12px; color: #92400e;
+      display: none; align-items: center; gap: 6px;
+    }
+    .threshold-hint.visible { display: flex; }
 
-  /* ── Links row ── */
-  .links { display: flex; gap: 10px; flex-wrap: wrap; }
-  .link-chip { display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--muted); text-decoration: none; transition: all .2s; }
-  .link-chip:hover { border-color: var(--accent); color: var(--accent); }
+    /* ── Submit button ──────────────────────────────────────────────────────── */
+    .btn-primary {
+      width: 100%; padding: 10px 16px;
+      background: var(--indigo); border: none; border-radius: 8px;
+      color: #fff; font-family: var(--font); font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .15s, transform .1s, box-shadow .15s;
+      box-shadow: 0 1px 2px rgba(79,70,229,.3);
+    }
+    .btn-primary:hover { background: #4338ca; box-shadow: var(--shadow-sm); }
+    .btn-primary:active { transform: scale(.99); }
+    .btn-primary:disabled { background: var(--indigo-m); cursor: not-allowed; transform: none; box-shadow: none; }
+    .spinner { display: none; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .65s linear infinite; flex-shrink: 0; }
+    .btn-primary.loading .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: var(--bg); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    /* ── SAGA Pipeline ──────────────────────────────────────────────────────── */
+    .pipeline {
+      position: relative; display: flex; align-items: center; gap: 0; padding: 8px 0 4px;
+    }
+    .pipe-track {
+      position: absolute; top: 28px; left: 22px; right: 22px; height: 2px;
+      background: var(--border);
+    }
+    .pipe-fill {
+      height: 100%; width: 0%; background: var(--indigo); border-radius: 2px;
+      transition: width .5s cubic-bezier(.4,0,.2,1);
+    }
+    .pipe-step {
+      position: relative; display: flex; flex-direction: column; align-items: center;
+      gap: 8px; flex: 1; z-index: 1;
+    }
+    .pipe-node {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2px solid var(--border2); background: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; transition: all .35s cubic-bezier(.4,0,.2,1);
+      box-shadow: var(--shadow-sm);
+    }
+    .pipe-label { font-size: 11px; font-weight: 500; color: var(--muted); text-align: center; line-height: 1.3; }
 
-  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
-</style>
+    .pipe-step.active .pipe-node { border-color: var(--indigo); background: var(--indigo-l); box-shadow: 0 0 0 4px rgba(79,70,229,.12); }
+    .pipe-step.done .pipe-node   { border-color: var(--green); background: var(--green-l); }
+    .pipe-step.fail .pipe-node   { border-color: var(--red); background: var(--red-l); }
+    .pipe-step.done .pipe-label  { color: var(--green); }
+    .pipe-step.fail .pipe-label  { color: var(--red); }
+    .pipe-step.active .pipe-label{ color: var(--indigo); }
+
+    /* ── Quick links ────────────────────────────────────────────────────────── */
+    .links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .link-item {
+      display: flex; align-items: center; gap: 8px; padding: 9px 10px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      font-size: 12px; font-weight: 500; color: var(--sub); text-decoration: none;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .link-item:hover { border-color: var(--indigo-m); color: var(--indigo); background: var(--indigo-l); }
+    .link-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); flex-shrink: 0; }
+    .link-item:hover .link-dot { background: var(--indigo); }
+
+    /* ── Top bar ────────────────────────────────────────────────────────────── */
+    .topbar { display: flex; align-items: center; justify-content: space-between; }
+    .topbar-title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+    .topbar-sub { font-size: 13px; color: var(--muted); margin-top: 1px; }
+    .topbar-actions { display: flex; gap: 8px; }
+
+    .btn-ghost {
+      padding: 8px 14px; background: var(--white); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--sub); font-family: var(--font); font-size: 13px;
+      font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;
+      transition: all .15s; box-shadow: var(--shadow-sm);
+    }
+    .btn-ghost:hover { border-color: var(--indigo-m); color: var(--indigo); }
+    .btn-ghost.spinning svg { animation: spin .6s linear infinite; }
+
+    /* ── Stats ──────────────────────────────────────────────────────────────── */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stat-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm);
+      position: relative; overflow: hidden;
+    }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .stat-total::before    { background: var(--indigo); }
+    .stat-completed::before{ background: var(--green); }
+    .stat-failed::before   { background: var(--red); }
+    .stat-pending::before  { background: var(--amber); }
+
+    .stat-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 10px; }
+    .stat-value { font-size: 30px; font-weight: 700; font-family: var(--mono); letter-spacing: -1px; color: var(--text); }
+    .stat-total .stat-value    { color: var(--indigo); }
+    .stat-completed .stat-value{ color: var(--green); }
+    .stat-failed .stat-value   { color: var(--red); }
+    .stat-pending .stat-value  { color: var(--amber); }
+
+    /* ── Table card ─────────────────────────────────────────────────────────── */
+    .table-card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden; flex: 1;
+    }
+    .table-head-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .table-head-row h2 { font-size: 15px; font-weight: 600; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{ opacity:1; box-shadow: 0 0 0 0 rgba(18,183,106,.4); } 50%{ box-shadow: 0 0 0 5px rgba(18,183,106,0); } }
+
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+      color: var(--muted); padding: 10px 20px; text-align: left;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg); }
+    td { padding: 13px 20px; font-size: 13px; }
+    .td-id    { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+    .td-product{ font-weight: 500; color: var(--text); }
+    .td-customer{ font-family: var(--mono); font-size: 12px; color: var(--sub); }
+    .td-amount { font-family: var(--mono); font-weight: 500; }
+    .td-time   { font-size: 12px; color: var(--muted); }
+
+    /* ── Badges ─────────────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 9px; border-radius: 20px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .badge-PENDING            { background: var(--amber-l); color: #92400e; }
+    .badge-PENDING .badge-dot { background: var(--amber); }
+    .badge-PAYMENT_PROCESSING            { background: var(--indigo-l); color: #3730a3; }
+    .badge-PAYMENT_PROCESSING .badge-dot { background: var(--indigo); animation: pulse-dot 1s infinite; }
+    .badge-COMPLETED            { background: var(--green-l); color: #065f46; }
+    .badge-COMPLETED .badge-dot { background: var(--green); }
+    .badge-FAILED            { background: var(--red-l); color: #9b1c1c; }
+    .badge-FAILED .badge-dot { background: var(--red); }
+    .badge-COMPENSATED            { background: var(--violet-l); color: #5b21b6; }
+    .badge-COMPENSATED .badge-dot { background: var(--violet); }
+    @keyframes pulse-dot { 0%,100%{ opacity:1; } 50%{ opacity:.3; } }
+
+    /* ── Empty state ────────────────────────────────────────────────────────── */
+    .empty {
+      padding: 64px 20px; text-align: center;
+    }
+    .empty-icon {
+      width: 52px; height: 52px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin: 0 auto 14px; box-shadow: var(--shadow-sm);
+    }
+    .empty h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .empty p  { font-size: 13px; color: var(--muted); }
+
+    /* ── Toast ──────────────────────────────────────────────────────────────── */
+    #toast { position: fixed; bottom: 28px; right: 28px; z-index: 999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .toast-item {
+      display: flex; align-items: flex-start; gap: 10px; padding: 13px 16px;
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); font-size: 13px; max-width: 320px; pointer-events: auto;
+      animation: toastIn .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes toastIn { from { transform: translateY(12px) scale(.95); opacity: 0; } to { transform: none; opacity: 1; } }
+    .toast-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+    .toast-body { display: flex; flex-direction: column; gap: 1px; }
+    .toast-title { font-weight: 600; color: var(--text); }
+    .toast-msg   { color: var(--sub); }
+    .toast-success { border-left: 3px solid var(--green); }
+    .toast-error   { border-left: 3px solid var(--red); }
+    .toast-info    { border-left: 3px solid var(--indigo); }
+
+    /* ── Scrollbar ──────────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
 </head>
 <body>
 
 <div class="shell">
-  <!-- ── SIDEBAR ── -->
+
+  <!-- ════════════ SIDEBAR ════════════ -->
   <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-icon">🛒</div>
-      <div class="logo-text">
-        <h1>ShopFlow</h1>
-        <p>SAGA Pattern Demo</p>
+
+    <!-- Logo -->
+    <div class="sidebar-top">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
+        <div>
+          <div class="logo-name">ShopFlow</div>
+          <div class="logo-tag">SAGA Pattern Demo</div>
+        </div>
       </div>
     </div>
 
-    <!-- Create order form -->
-    <div class="card">
-      <div class="card-title">New Order</div>
+    <!-- New Order Form -->
+    <div class="sidebar-section">
+      <div class="section-label">New Order</div>
 
       <div class="field">
-        <label>Product</label>
-        <select id="product">
+        <label for="product">Product</label>
+        <select id="product" onchange="onProductChange()">
           <option value="Laptop Pro X1">💻 Laptop Pro X1</option>
           <option value="Wireless Headphones">🎧 Wireless Headphones</option>
           <option value="Mechanical Keyboard">⌨️ Mechanical Keyboard</option>
           <option value="4K Monitor">🖥️ 4K Monitor</option>
           <option value="Gaming Mouse">🖱️ Gaming Mouse</option>
           <option value="USB-C Hub">🔌 USB-C Hub</option>
-          <option value="Custom Item">✏️ Custom Item...</option>
+          <option value="Custom Item">✏️ Custom…</option>
         </select>
       </div>
 
       <div class="field" id="customField" style="display:none">
-        <label>Custom Product Name</label>
-        <input type="text" id="customProduct" placeholder="Enter product name"/>
+        <label for="customProduct">Custom Name</label>
+        <input type="text" id="customProduct" placeholder="Product name"/>
       </div>
 
       <div class="field">
-        <label>Customer ID</label>
+        <label for="customerId">Customer ID</label>
         <input type="text" id="customerId" value="cust-001" placeholder="e.g. cust-001"/>
       </div>
 
       <div class="field">
-        <label>Amount (USD)</label>
+        <label for="amount">Amount (USD)</label>
         <div class="amount-wrap">
-          <span>$</span>
-          <input type="number" id="amount" value="199.99" min="1" step="0.01" placeholder="0.00"/>
+          <span class="amount-prefix">$</span>
+          <input type="number" id="amount" value="199.99" min="0.01" step="0.01" oninput="onAmountChange()"/>
         </div>
-        <div class="threshold-hint" id="thresholdHint" style="display:none">
-          ⚠️ Amounts above $500 will trigger SAGA compensation (fail)
+        <div class="threshold-hint" id="thresholdHint">
+          <span>⚠</span> Amounts above $500 trigger SAGA compensation
         </div>
       </div>
 
-      <button class="btn-submit" id="submitBtn" onclick="createOrder()">
+      <button class="btn-primary" id="submitBtn" onclick="createOrder()">
         <div class="spinner"></div>
-        <span class="btn-label">🚀 Create Order + Trigger SAGA</span>
+        <span id="btnLabel">Place Order</span>
       </button>
     </div>
 
-    <!-- SAGA flow visual -->
-    <div class="card">
-      <div class="card-title">SAGA Flow</div>
-      <div class="saga-flow">
-        <div class="saga-step" id="step-create">
-          <div class="saga-step-icon">📝</div>
-          <div class="saga-step-label">Order<br/>Created</div>
+    <!-- SAGA Pipeline -->
+    <div class="sidebar-section">
+      <div class="section-label">SAGA Pipeline</div>
+      <div class="pipeline">
+        <div class="pipe-track"><div class="pipe-fill" id="pipeFill"></div></div>
+        <div class="pipe-step" id="step-create">
+          <div class="pipe-node">📝</div>
+          <div class="pipe-label">Order<br/>Created</div>
         </div>
-        <div class="saga-arrow">→</div>
-        <div class="saga-step" id="step-publish">
-          <div class="saga-step-icon">📨</div>
-          <div class="saga-step-label">Event<br/>Published</div>
+        <div class="pipe-step" id="step-publish">
+          <div class="pipe-node">📨</div>
+          <div class="pipe-label">Event<br/>Published</div>
         </div>
-        <div class="saga-arrow">→</div>
-        <div class="saga-step" id="step-process">
-          <div class="saga-step-icon">💳</div>
-          <div class="saga-step-label">Payment<br/>Processing</div>
+        <div class="pipe-step" id="step-process">
+          <div class="pipe-node">💳</div>
+          <div class="pipe-label">Payment<br/>Processing</div>
         </div>
-        <div class="saga-arrow">→</div>
-        <div class="saga-step" id="step-result">
-          <div class="saga-step-icon">✅</div>
-          <div class="saga-step-label">SAGA<br/>Complete</div>
+        <div class="pipe-step" id="step-result">
+          <div class="pipe-node" id="resultNode">✅</div>
+          <div class="pipe-label">SAGA<br/>Complete</div>
         </div>
       </div>
     </div>
 
-    <!-- Quick links -->
-    <div class="card">
-      <div class="card-title">Quick Links</div>
-      <div class="links">
-        <a class="link-chip" href="http://localhost:3001" target="_blank">📊 Grafana</a>
-        <a class="link-chip" href="http://localhost:15672" target="_blank">🐇 RabbitMQ</a>
-        <a class="link-chip" href="http://localhost:9090" target="_blank">📈 Prometheus</a>
-        <a class="link-chip" href="http://localhost:8081/api/orders" target="_blank">🔗 Orders API</a>
-        <a class="link-chip" href="http://localhost:8082/api/payments" target="_blank">🔗 Payments API</a>
+    <!-- Quick Links -->
+    <div class="sidebar-section">
+      <div class="section-label">Services</div>
+      <div class="links-grid">
+        <a class="link-item" href="http://localhost:3001" target="_blank"><span class="link-dot"></span>Grafana</a>
+        <a class="link-item" href="http://localhost:8761" target="_blank"><span class="link-dot"></span>Eureka</a>
+        <a class="link-item" href="http://localhost:15672" target="_blank"><span class="link-dot"></span>RabbitMQ</a>
+        <a class="link-item" href="http://localhost:9090" target="_blank"><span class="link-dot"></span>Prometheus</a>
+        <a class="link-item" href="http://localhost:8086/api/orders" target="_blank"><span class="link-dot"></span>Orders API</a>
+        <a class="link-item" href="http://localhost:8086/api/payments" target="_blank"><span class="link-dot"></span>Payments API</a>
       </div>
     </div>
+
   </aside>
 
-  <!-- ── MAIN ── -->
+  <!-- ════════════ MAIN ════════════ -->
   <main class="main">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Order Stream</div>
+        <div class="topbar-sub"><span class="live-dot"></span>Live — refreshes every 5s</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-ghost" id="refreshBtn" onclick="loadOrders()">
+          <svg id="refreshIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+
     <!-- Stats -->
     <div class="stats">
       <div class="stat-card stat-total">
@@ -248,7 +403,7 @@
         <div class="stat-value" id="statCompleted">—</div>
       </div>
       <div class="stat-card stat-failed">
-        <div class="stat-label">Failed / Compensated</div>
+        <div class="stat-label">Failed</div>
         <div class="stat-value" id="statFailed">—</div>
       </div>
       <div class="stat-card stat-pending">
@@ -257,232 +412,211 @@
       </div>
     </div>
 
-    <!-- Orders table -->
-    <div>
-      <div class="orders-header">
-        <h2>Order Stream</h2>
-        <button class="refresh-btn" id="refreshBtn" onclick="loadOrders()">
-          <svg id="refreshIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Refresh
-        </button>
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-head-row">
+        <h2>Orders</h2>
       </div>
-
-      <div class="table-wrap">
+      <div style="overflow-x:auto">
         <table>
           <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Product</th>
-              <th>Customer</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Created</th>
-            </tr>
+          <tr>
+            <th>Order ID</th>
+            <th>Product</th>
+            <th>Customer</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Time</th>
+          </tr>
           </thead>
           <tbody id="ordersBody">
-            <tr>
-              <td colspan="6">
-                <div class="empty-state">
-                  <div class="icon">📭</div>
-                  <p>No orders yet. Create one to see the SAGA in action!</p>
-                </div>
-              </td>
-            </tr>
+          <tr>
+            <td colspan="6">
+              <div class="empty">
+                <div class="empty-icon">📭</div>
+                <h3>No orders yet</h3>
+                <p>Place an order on the left to see the SAGA in action</p>
+              </div>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
     </div>
+
   </main>
 </div>
 
 <div id="toast"></div>
 
 <script>
-const API = 'http://localhost:8086';
-let pollTimer = null;
+  const API = 'http://localhost:8086';
 
-// ── Product selector ──────────────────────────────────────────────────────────
-document.getElementById('product').addEventListener('change', function() {
-  const isCustom = this.value === 'Custom Item';
-  document.getElementById('customField').style.display = isCustom ? 'block' : 'none';
-});
+  // ── Form interactions ─────────────────────────────────────────────────────
+  function onProductChange() {
+    const isCustom = document.getElementById('product').value === 'Custom Item';
+    document.getElementById('customField').style.display = isCustom ? 'block' : 'none';
+  }
+  function onAmountChange() {
+    const hint = document.getElementById('thresholdHint');
+    hint.classList.toggle('visible', parseFloat(document.getElementById('amount').value) > 500);
+  }
 
-// ── Amount threshold hint ─────────────────────────────────────────────────────
-document.getElementById('amount').addEventListener('input', function() {
-  const hint = document.getElementById('thresholdHint');
-  hint.style.display = parseFloat(this.value) > 500 ? 'flex' : 'none';
-});
+  // ── Create order ──────────────────────────────────────────────────────────
+  async function createOrder() {
+    const btn = document.getElementById('submitBtn');
+    const productSel = document.getElementById('product').value;
+    const product = productSel === 'Custom Item'
+            ? document.getElementById('customProduct').value.trim() : productSel;
+    const customerId = document.getElementById('customerId').value.trim();
+    const amount = parseFloat(document.getElementById('amount').value);
 
-// ── Create order ──────────────────────────────────────────────────────────────
-async function createOrder() {
-  const btn = document.getElementById('submitBtn');
-  const productSel = document.getElementById('product').value;
-  const product = productSel === 'Custom Item'
-    ? document.getElementById('customProduct').value.trim()
-    : productSel;
-  const customerId = document.getElementById('customerId').value.trim();
-  const amount = parseFloat(document.getElementById('amount').value);
+    if (!product)           return showToast('Missing product', 'Enter a product name', 'error');
+    if (!customerId)        return showToast('Missing customer', 'Enter a customer ID', 'error');
+    if (!amount || amount <= 0) return showToast('Invalid amount', 'Enter an amount greater than 0', 'error');
 
-  if (!product) { showToast('Enter a product name', 'error'); return; }
-  if (!customerId) { showToast('Enter a customer ID', 'error'); return; }
-  if (!amount || amount <= 0) { showToast('Enter a valid amount', 'error'); return; }
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('btnLabel').textContent = 'Placing order…';
+    resetPipeline();
+    setStep('create', 'active');
 
-  btn.disabled = true;
-  btn.classList.add('loading');
-  resetSagaFlow();
+    try {
+      const res = await fetch(`${API}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product, customerId, amount })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      const order = await res.json();
 
-  try {
-    animateSagaStep('create', 'active');
+      setStep('create', 'done');
+      advanceFill(33);
+      setTimeout(() => { setStep('publish', 'active'); }, 250);
+      setTimeout(() => { setStep('publish', 'done'); advanceFill(66); setStep('process', 'active'); }, 650);
 
-    const res = await fetch(`${API}/api/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product, customerId, amount })
-    });
+      showToast('Order placed', `ID: ${order.id.substring(0,8)}…`, 'success');
+      await loadOrders();
+      pollOrderStatus(order.id);
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP ${res.status}`);
+    } catch (err) {
+      setStep('create', 'fail');
+      setStep('result', 'fail');
+      document.getElementById('resultNode').textContent = '❌';
+      showToast('Order failed', err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      document.getElementById('btnLabel').textContent = 'Place Order';
     }
-
-    const order = await res.json();
-    animateSagaStep('create', 'done');
-
-    setTimeout(() => animateSagaStep('publish', 'active'), 300);
-    setTimeout(() => { animateSagaStep('publish', 'done'); animateSagaStep('process', 'active'); }, 700);
-
-    showToast(`Order created! ID: ${order.id.substring(0,8)}…`, 'success');
-    await loadOrders();
-
-    // Poll for final status
-    pollOrderStatus(order.id);
-
-  } catch (err) {
-    animateSagaStep('create', 'fail');
-    animateSagaStep('result', 'fail');
-    document.getElementById('step-result').querySelector('.saga-step-icon').textContent = '❌';
-    showToast('Failed: ' + err.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.classList.remove('loading');
   }
-}
 
-// ── Poll order until terminal state ──────────────────────────────────────────
-async function pollOrderStatus(orderId, attempts = 0) {
-  if (attempts > 20) return;
-  await new Promise(r => setTimeout(r, 800));
+  // ── Poll ──────────────────────────────────────────────────────────────────
+  async function pollOrderStatus(orderId, attempts = 0) {
+    if (attempts > 25) return;
+    await new Promise(r => setTimeout(r, 800));
+    try {
+      const res = await fetch(`${API}/api/orders/${orderId}`);
+      if (!res.ok) return pollOrderStatus(orderId, attempts + 1);
+      const order = await res.json();
+      await loadOrders();
 
-  try {
-    const res = await fetch(`${API}/api/orders/${orderId}`);
-    if (!res.ok) return;
-    const order = await res.json();
+      if (order.status === 'COMPLETED') {
+        setStep('process', 'done'); advanceFill(100); setStep('result', 'done');
+        document.getElementById('resultNode').textContent = '✅';
+        showToast('SAGA complete', 'Order confirmed & payment captured', 'success');
+      } else if (['FAILED','COMPENSATED'].includes(order.status)) {
+        setStep('process', 'fail'); setStep('result', 'fail');
+        document.getElementById('resultNode').textContent = '↩️';
+        showToast('SAGA compensated', 'Payment declined — order rolled back', 'error');
+      } else {
+        pollOrderStatus(orderId, attempts + 1);
+      }
+    } catch (_) { pollOrderStatus(orderId, attempts + 1); }
+  }
 
-    await loadOrders();
-
-    if (order.status === 'COMPLETED') {
-      animateSagaStep('process', 'done');
-      animateSagaStep('result', 'done');
-      document.getElementById('step-result').querySelector('.saga-step-icon').textContent = '✅';
-      showToast('SAGA complete — order COMPLETED ✅', 'success');
-    } else if (order.status === 'FAILED' || order.status === 'COMPENSATED') {
-      animateSagaStep('process', 'fail');
-      animateSagaStep('result', 'fail');
-      document.getElementById('step-result').querySelector('.saga-step-icon').textContent = '🔄';
-      showToast('SAGA compensated — payment declined, order FAILED 🔄', 'error');
-    } else {
-      // Still processing
-      pollOrderStatus(orderId, attempts + 1);
+  // ── Load orders ───────────────────────────────────────────────────────────
+  async function loadOrders() {
+    document.getElementById('refreshBtn').classList.add('spinning');
+    try {
+      const res = await fetch(`${API}/api/orders`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const orders = (await res.json()).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      updateStats(orders);
+      renderTable(orders);
+    } catch {
+      showToast('Connection error', 'Could not reach the API gateway', 'error');
+    } finally {
+      document.getElementById('refreshBtn').classList.remove('spinning');
     }
-  } catch (_) {
-    pollOrderStatus(orderId, attempts + 1);
   }
-}
 
-// ── Load orders ───────────────────────────────────────────────────────────────
-async function loadOrders() {
-  const btn = document.getElementById('refreshBtn');
-  btn.classList.add('spinning');
-
-  try {
-    const res = await fetch(`${API}/api/orders`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const orders = await res.json();
-
-    // Sort newest first
-    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    updateStats(orders);
-    renderTable(orders);
-  } catch (err) {
-    showToast('Could not load orders — is the API gateway running?', 'error');
-  } finally {
-    btn.classList.remove('spinning');
+  function updateStats(orders) {
+    document.getElementById('statTotal').textContent     = orders.length;
+    document.getElementById('statCompleted').textContent = orders.filter(o => o.status === 'COMPLETED').length;
+    document.getElementById('statFailed').textContent    = orders.filter(o => ['FAILED','COMPENSATED'].includes(o.status)).length;
+    document.getElementById('statPending').textContent   = orders.filter(o => ['PENDING','PAYMENT_PROCESSING'].includes(o.status)).length;
   }
-}
 
-function updateStats(orders) {
-  document.getElementById('statTotal').textContent = orders.length;
-  document.getElementById('statCompleted').textContent = orders.filter(o => o.status === 'COMPLETED').length;
-  document.getElementById('statFailed').textContent = orders.filter(o => ['FAILED','COMPENSATED'].includes(o.status)).length;
-  document.getElementById('statPending').textContent = orders.filter(o => ['PENDING','PAYMENT_PROCESSING'].includes(o.status)).length;
-}
-
-function renderTable(orders) {
-  const tbody = document.getElementById('ordersBody');
-  if (!orders.length) {
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">📭</div><p>No orders yet. Create one to see the SAGA in action!</p></div></td></tr>`;
-    return;
-  }
-  tbody.innerHTML = orders.map(o => `
+  function renderTable(orders) {
+    const tbody = document.getElementById('ordersBody');
+    if (!orders.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📭</div><h3>No orders yet</h3><p>Place an order on the left to see the SAGA in action</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = orders.map(o => `
     <tr>
-      <td class="id-col">${o.id.substring(0,8)}…</td>
-      <td class="product-col">${escHtml(o.product)}</td>
-      <td>${escHtml(o.customerId)}</td>
-      <td>$${parseFloat(o.amount).toFixed(2)}</td>
-      <td><span class="badge badge-${o.status}">${o.status.replace('_',' ')}</span></td>
-      <td>${formatDate(o.createdAt)}</td>
+      <td class="td-id">${o.id.substring(0,8)}…</td>
+      <td class="td-product">${esc(o.product)}</td>
+      <td class="td-customer">${esc(o.customerId)}</td>
+      <td class="td-amount">$${parseFloat(o.amount).toFixed(2)}</td>
+      <td><span class="badge badge-${o.status}"><span class="badge-dot"></span>${o.status.replace(/_/g,' ')}</span></td>
+      <td class="td-time">${fmtTime(o.createdAt)}</td>
     </tr>
   `).join('');
-}
+  }
 
-// ── SAGA step animation ────────────────────────────────────────────────────────
-function resetSagaFlow() {
-  ['create','publish','process','result'].forEach(s => {
-    const el = document.getElementById(`step-${s}`);
-    el.classList.remove('active','done','fail');
-  });
-  document.getElementById('step-result').querySelector('.saga-step-icon').textContent = '✅';
-}
+  // ── Pipeline helpers ──────────────────────────────────────────────────────
+  function resetPipeline() {
+    ['create','publish','process','result'].forEach(s => {
+      document.getElementById(`step-${s}`).className = 'pipe-step';
+    });
+    document.getElementById('resultNode').textContent = '✅';
+    document.getElementById('pipeFill').style.width = '0%';
+  }
+  function setStep(step, state) {
+    const el = document.getElementById(`step-${step}`);
+    el.className = 'pipe-step ' + state;
+  }
+  function advanceFill(pct) {
+    document.getElementById('pipeFill').style.width = pct + '%';
+  }
 
-function animateSagaStep(step, state) {
-  const el = document.getElementById(`step-${step}`);
-  el.classList.remove('active','done','fail');
-  el.classList.add(state);
-}
+  // ── Toast ─────────────────────────────────────────────────────────────────
+  function showToast(title, msg, type = 'info') {
+    const icons = { success: '✓', error: '✕', info: 'ℹ' };
+    const container = document.getElementById('toast');
+    const el = document.createElement('div');
+    el.className = `toast-item toast-${type}`;
+    el.innerHTML = `<span class="toast-icon">${icons[type]}</span><div class="toast-body"><div class="toast-title">${esc(title)}</div><div class="toast-msg">${esc(msg)}</div></div>`;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
-function showToast(msg, type = 'info') {
-  const container = document.getElementById('toast');
-  const item = document.createElement('div');
-  item.className = `toast-item toast-${type}`;
-  item.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span> ${escHtml(msg)}`;
-  container.appendChild(item);
-  setTimeout(() => item.remove(), 4000);
-}
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtTime(d) {
+    if (!d) return '—';
+    try { return new Date(d).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+    catch(_) { return d; }
+  }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function formatDate(d) {
-  if (!d) return '—';
-  try { return new Date(d).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
-  catch(_) { return d; }
-}
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-loadOrders();
-// Auto-refresh every 5s
-setInterval(loadOrders, 5000);
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadOrders();
+  setInterval(loadOrders, 5000);
 </script>
 </body>
 </html>
