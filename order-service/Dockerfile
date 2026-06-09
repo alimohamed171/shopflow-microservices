@@ -1,10 +1,13 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
+
+ENV MAVEN_OPTS="-Xmx512m -Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2"
+
 COPY order-service/pom.xml ./pom.xml
-COPY order-service/src     ./src
-RUN mvn -B package -DskipTests \
-    -Dmaven.wagon.httpconnectionManager.ttlSeconds=25 \
-    -Dmaven.wagon.http.retryHandler.count=3
+#RUN mvn -B dependency:resolve -DskipTests
+
+COPY order-service/src ./src
+RUN mvn -B package -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
