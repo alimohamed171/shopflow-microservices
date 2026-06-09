@@ -8,7 +8,7 @@ spring:
     gateway:
       routes:
         - id: order-service
-          uri: http://service-order:8081
+          uri: lb://service-order
           predicates:
             - Path=/api/orders/**
           filters:
@@ -17,7 +17,7 @@ spring:
                 name: orderService
                 fallbackUri: forward:/fallback/orders
         - id: payment-service
-          uri: http://service-payment:8082
+          uri: lb://service-payment
           predicates:
             - Path=/api/payments/**
           filters:
@@ -59,3 +59,12 @@ otel:
 app:
   jwt:
     secret: shopflow-super-secret-key-change-in-production-must-be-256-bits-long
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
