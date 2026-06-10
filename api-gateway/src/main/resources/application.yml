@@ -58,7 +58,7 @@ otel:
 
 app:
   jwt:
-    secret: shopflow-super-secret-key-change-in-production-must-be-256-bits-long
+    secret:  ${JWT_SECRET}
 
 eureka:
   client:
