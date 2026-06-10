@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.UUID;
 
-// ── Event received FROM payment service ───────────────────────────
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

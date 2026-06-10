@@ -28,36 +28,25 @@ public class PaymentService {
     @Value("${payment.max-amount:10000.00}")
     private BigDecimal maxAmount;
 
-    /**
-     * Process a payment for a given order. Returns the saved Payment entity.
-     * Throws DuplicatePaymentException if the order already has a payment record.
-     * Throws InvalidAmountException for zero / negative / over-max amounts.
-     */
     @Transactional
     public Payment processPayment(UUID orderId, String customerId, BigDecimal amount, String product) {
         log.info("[PAYMENT-SVC] Processing payment orderId={} customerId={} amount={}", orderId, customerId, amount);
 
-        // ── Guard: amount validation ──────────────────────────────────────────
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("Amount must be greater than zero, got: " + amount);
         }
         if (amount.compareTo(maxAmount) > 0) {
             throw new InvalidAmountException("Amount " + amount + " exceeds the maximum allowed " + maxAmount);
         }
-
-        // ── Guard: idempotency ────────────────────────────────────────────────
-        if (paymentRepository.existsByOrderId(orderId)) {
+    if (paymentRepository.existsByOrderId(orderId)) {
             log.warn("[PAYMENT-SVC] Duplicate payment attempt for orderId={}", orderId);
             throw new DuplicatePaymentException(orderId);
         }
 
-        // ── Build payment record ──────────────────────────────────────────────
         Payment payment = new Payment();
         payment.setOrderId(orderId);
         payment.setCustomerId(customerId);
         payment.setAmount(amount);
-
-        // ── Simulate: amounts above threshold fail (demos SAGA compensation) ──
         if (amount.compareTo(failThreshold) > 0) {
             String reason = "Amount " + amount + " exceeds configured limit of " + failThreshold;
             payment.setStatus(Payment.PaymentStatus.FAILED);
@@ -73,40 +62,25 @@ public class PaymentService {
         return saved;
     }
 
-    /**
-     * Retrieve a payment by its UUID. Throws PaymentNotFoundException if missing.
-     */
     @Transactional(readOnly = true)
     public Payment getPayment(UUID id) {
         return paymentRepository.findById(id)
                 .orElseThrow(() -> new PaymentNotFoundException(id));
     }
 
-    /**
-     * Find all payments for a given orderId. Returns an empty list if none found.
-     */
     @Transactional(readOnly = true)
     public List<Payment> getPaymentsByOrderId(UUID orderId) {
         log.debug("[PAYMENT-SVC] Looking up payments for orderId={}", orderId);
         return paymentRepository.findAllByOrderId(orderId);
     }
-
-    /**
-     * Return all payments (admin / debugging).
-     */
     @Transactional(readOnly = true)
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
     }
 
-    /**
-     * Retry a failed payment by orderId. Creates a new payment record.
-     */
     @Transactional
     public Payment retryPayment(UUID orderId, String customerId, BigDecimal amount) {
         log.info("[PAYMENT-SVC] Retry requested for orderId={}", orderId);
-
-        // Delete the failed payment so idempotency guard won't block it
         paymentRepository.findAllByOrderId(orderId).stream()
                 .filter(p -> p.getStatus() == Payment.PaymentStatus.FAILED)
                 .forEach(p -> {

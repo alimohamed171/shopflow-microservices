@@ -22,16 +22,6 @@ public class PaymentSagaParticipant {
     private final PaymentService paymentService;
     private final RabbitTemplate rabbitTemplate;
 
-    /**
-     * SAGA PARTICIPANT — listens for payment requests, delegates to PaymentService,
-     * then sends back a PaymentResponseEvent with success/failure.
-     *
-     * Exception handling strategy:
-     *  - DuplicatePaymentException → idempotent failure (already processed), send failure
-     *  - InvalidAmountException    → business validation failure, send failure
-     *  - PaymentException          → general domain error, send failure
-     *  - Any other exception       → unexpected error, send failure (don't re-throw so message is ack'd)
-     */
     @RabbitListener(queues = RabbitMqConfig.PAYMENT_REQUEST_QUEUE)
     public void processPaymentRequest(PaymentRequestEvent event) {
         log.info("[SAGA-PARTICIPANT] Received payment request orderId={} customerId={} amount={}",
@@ -82,7 +72,6 @@ public class PaymentSagaParticipant {
                     "Internal payment processing error");
         }
 
-        // Always reply so the saga orchestrator can move forward
         rabbitTemplate.convertAndSend(
                 RabbitMqConfig.SAGA_EXCHANGE,
                 RabbitMqConfig.PAYMENT_RESPONSE_QUEUE,

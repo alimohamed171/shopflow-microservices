@@ -18,7 +18,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ── Domain exceptions ──────────────────────────────────────────────────────
 
     @ExceptionHandler(PaymentNotFoundException.class)
     public ResponseEntity<ErrorResponse> handlePaymentNotFound(PaymentNotFoundException ex) {
@@ -48,8 +47,6 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(ex.getErrorCode(), ex.getMessage()));
     }
 
-    // ── Messaging exceptions ───────────────────────────────────────────────────
-
     @ExceptionHandler(AmqpException.class)
     public ResponseEntity<ErrorResponse> handleAmqpException(AmqpException ex) {
         log.error("[PAYMENT][ERROR] RabbitMQ error: {}", ex.getMessage(), ex);
@@ -57,7 +54,6 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("MESSAGING_ERROR", "Messaging service unavailable"));
     }
 
-    // ── Validation exceptions ──────────────────────────────────────────────────
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
@@ -77,7 +73,6 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("BAD_REQUEST", "Malformed or missing request body"));
     }
 
-    // ── Fallback ───────────────────────────────────────────────────────────────
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneral(Exception ex) {
@@ -86,7 +81,6 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse("INTERNAL_ERROR", "An unexpected error occurred"));
     }
 
-    // ── Response record ────────────────────────────────────────────────────────
 
     public record ErrorResponse(
             String code,

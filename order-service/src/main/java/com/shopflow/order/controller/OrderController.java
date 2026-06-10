@@ -1,9 +1,8 @@
 package com.shopflow.order.controller;
 
-import com.shopflow.order.exception.OrderNotFoundException;
 import com.shopflow.order.model.Order;
-import com.shopflow.order.repository.OrderRepository;
-import com.shopflow.order.saga.OrderSagaOrchestrator;
+import com.shopflow.order.saga.OrderSaga;
+import com.shopflow.order.service.OrderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,8 +23,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderSagaOrchestrator saga;
-    private final OrderRepository orderRepository;
+    private final OrderSaga saga;
+    private final OrderService orderService;
 
     @PostMapping
     public ResponseEntity<Order> createOrder(@Valid @RequestBody CreateOrderRequest req) {
@@ -37,19 +36,17 @@ public class OrderController {
 
     @GetMapping
     public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+        return orderService.findAll();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrder(@PathVariable UUID id) {
-        return orderRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseThrow(() -> new OrderNotFoundException(id));
+        return ResponseEntity.ok(orderService.findById(id));
     }
 
     @GetMapping("/status")
     public Map<String, Object> status() {
-        return Map.of("service", "service-order", "total", orderRepository.count());
+        return Map.of("service", "service-order", "total", orderService.count());
     }
 
     public record CreateOrderRequest(

@@ -3,7 +3,6 @@ package com.shopflow.order.saga;
 import com.shopflow.order.config.RabbitMqConfig;
 import com.shopflow.order.event.PaymentRequestEvent;
 import com.shopflow.order.event.PaymentResponseEvent;
-import com.shopflow.order.exception.OrderNotFoundException;
 import com.shopflow.order.model.Order;
 import com.shopflow.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,23 +18,15 @@ import java.math.BigDecimal;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OrderSagaOrchestrator {
+public class OrderSaga {
 
     private final OrderRepository orderRepository;
     private final RabbitTemplate rabbitTemplate;
 
-    /**
-     * STEP 1 — Start the saga: persist order as PENDING → PAYMENT_PROCESSING,
-     * then publish a PaymentRequestEvent.
-     *
-     * If RabbitMQ publishing fails, the order is rolled back (transaction) and
-     * an AmqpException propagates to the controller / global handler.
-     */
     @Transactional
     public Order startSaga(String product, String customerId, BigDecimal amount) {
         log.info("[SAGA] Starting saga product='{}' customerId='{}' amount={}", product, customerId, amount);
 
-        // ── Persist PENDING order ─────────────────────────────────────────────
         Order order = new Order();
         order.setProduct(product);
         order.setCustomerId(customerId);
@@ -44,12 +35,8 @@ public class OrderSagaOrchestrator {
         order = orderRepository.save(order);
 
         log.info("[SAGA] Order persisted orderId={} status=PENDING", order.getId());
-
-        // ── Transition → PAYMENT_PROCESSING ──────────────────────────────────
         order.setStatus(Order.OrderStatus.PAYMENT_PROCESSING);
         orderRepository.save(order);
-
-        // ── Publish payment request ───────────────────────────────────────────
         PaymentRequestEvent event = new PaymentRequestEvent(
                 order.getId(), customerId, amount, product);
         try {
@@ -61,21 +48,12 @@ public class OrderSagaOrchestrator {
         } catch (AmqpException ex) {
             log.error("[SAGA] Failed to publish PaymentRequestEvent for orderId={}: {}",
                     order.getId(), ex.getMessage(), ex);
-            // Re-throw so @Transactional rolls back order persistence
             throw ex;
         }
 
         return order;
     }
 
-    /**
-     * STEP 2 — React to the payment response.
-     * SUCCESS  → COMPLETED
-     * FAILURE  → FAILED (compensation applied)
-     *
-     * If the order is missing we log the error but do NOT throw — we don't want
-     * an undeliverable message to be re-queued forever.
-     */
     @RabbitListener(queues = RabbitMqConfig.PAYMENT_RESPONSE_QUEUE)
     @Transactional
     public void handlePaymentResponse(PaymentResponseEvent event) {
@@ -87,11 +65,11 @@ public class OrderSagaOrchestrator {
                 if (event.isSuccess()) {
                     order.setStatus(Order.OrderStatus.COMPLETED);
                     orderRepository.save(order);
-                    log.info("[SAGA] ✅ Order COMPLETED orderId={}", order.getId());
+                    log.info("[SAGA]  Order COMPLETED orderId={}", order.getId());
                 } else {
                     order.setStatus(Order.OrderStatus.FAILED);
                     orderRepository.save(order);
-                    log.warn("[SAGA] ❌ Order FAILED (compensated) orderId={} reason={}",
+                    log.warn("[SAGA]  Order FAILED (compensated) orderId={} reason={}",
                             order.getId(), event.getReason());
                 }
             }, () -> log.error("[SAGA] Order not found for payment response orderId={} — cannot apply state change",
@@ -99,7 +77,6 @@ public class OrderSagaOrchestrator {
         } catch (Exception ex) {
             log.error("[SAGA] Unexpected error handling payment response for orderId={}: {}",
                     event.getOrderId(), ex.getMessage(), ex);
-            // Do NOT re-throw — let the message be ack'd to avoid poison-pill loops
         }
     }
 }
